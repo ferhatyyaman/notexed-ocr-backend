@@ -72,6 +72,78 @@ app.post('/ocr', async (req, res) => {
     }
 });
 
+// TTS endpoint
+app.post('/tts', async (req, res) => {
+    try {
+        console.log('TTS request received');
+
+        const { text, voice = 'tr-TR-Wavenet-A', speed = 1.0 } = req.body;
+
+        if (!text) {
+            return res.status(400).json({
+                error: 'No text provided',
+                message: 'Please send text in "text" field'
+            });
+        }
+
+        console.log('Generating speech with Google Cloud TTS...');
+        console.log('Text length:', text.length);
+        console.log('Voice:', voice);
+        console.log('Speed:', speed);
+
+        // Google Cloud TTS API
+        const TTS_API_KEY = 'AIzaSyBYz5oFvCcz-6LxG9JkYy0mqt8KWvK_FG8';
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${TTS_API_KEY}`;
+
+        const requestBody = {
+            input: { text: text },
+            voice: {
+                languageCode: 'tr-TR',
+                name: voice
+            },
+            audioConfig: {
+                audioEncoding: 'MP3',
+                speakingRate: speed,
+                pitch: 0
+            }
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Google TTS Error:', errorData);
+            throw new Error('TTS API failed');
+        }
+
+        const data = await response.json();
+        const audioContent = data.audioContent;
+
+        console.log('TTS completed successfully');
+        console.log('Audio size:', audioContent.length);
+
+        res.json({
+            success: true,
+            audio: audioContent,
+            voice: voice,
+            length: audioContent.length
+        });
+
+    } catch (error) {
+        console.error('TTS Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Failed to generate speech'
+        });
+    }
+});
+
+
 // Start server
 app.listen(PORT, () => {
     console.log(`OCR Backend running on port ${PORT}`);
