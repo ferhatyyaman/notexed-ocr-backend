@@ -92,7 +92,7 @@ app.post('/tts', async (req, res) => {
         console.log('Speed:', speed);
 
         // Google Cloud TTS API
-        const TTS_API_KEY = 'AIzaSyBYz5oFvCcz-6LxG9JkYy0mqt8KWvK_FG8';
+        const TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;
         const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${TTS_API_KEY}`;
 
         const requestBody = {
